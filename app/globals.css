@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --candela-orange: #FF6B35;
+  --candela-black: #0D0D0D;
+  --candela-white: #FAFAFA;
+  --candela-gray: #2A2A2A;
+  --candela-muted: #6B6B6B;
+}
+
+body {
+  @apply bg-candela-black text-candela-white antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--candela-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--candela-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--candela-orange);
+}
+
+/* Selection */
+::selection {
+  background: var(--candela-orange);
+  color: var(--candela-black);
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: 2px solid var(--candela-orange);
+  outline-offset: 2px;
+}
