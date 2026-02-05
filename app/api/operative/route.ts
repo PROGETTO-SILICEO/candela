@@ -4,7 +4,16 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
-const LOG_DIR = path.resolve(process.env.LOG_PATH || path.join(process.cwd(), 'logs', 'operative_reports'));
+const getLogDir = () => {
+    if (process.env.LOG_PATH) return path.resolve(process.env.LOG_PATH);
+    const cwd = process.cwd();
+    if (cwd.includes('.next' + path.sep + 'standalone') || cwd.endsWith('.next' + path.sep + 'standalone')) {
+        return path.resolve(cwd, '..', '..', 'logs', 'operative_reports');
+    }
+    return path.resolve(cwd, 'logs', 'operative_reports');
+};
+
+const LOG_DIR = getLogDir();
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);

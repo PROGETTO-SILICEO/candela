@@ -3,8 +3,21 @@ import path from 'path';
 import { FactCheckReport } from './types';
 
 // In produzione su Railway, i volumi sono montati solitamente in /app/logs
-// Usiamo un percorso assoluto se possibile per evitare ambiguità con process.cwd()
-const LOG_DIR = path.resolve(process.env.LOG_PATH || path.join(process.cwd(), 'logs', 'operative_reports'));
+// In modalità standalone, process.cwd() è /app/.next/standalone. 
+// Dobbiamo risalire alla radice /app per trovare il volume persistente.
+const getLogDir = () => {
+    if (process.env.LOG_PATH) return path.resolve(process.env.LOG_PATH);
+
+    const cwd = process.cwd();
+    // Se siamo in standalone, risaliamo di due livelli per arrivare a /app
+    if (cwd.includes('.next' + path.sep + 'standalone') || cwd.endsWith('.next' + path.sep + 'standalone')) {
+        return path.resolve(cwd, '..', '..', 'logs', 'operative_reports');
+    }
+    // Fallback standard
+    return path.resolve(cwd, 'logs', 'operative_reports');
+};
+
+const LOG_DIR = getLogDir();
 
 /**
  * Salva il report integrale (inclusi internalLog e diari) in un file locale riservato.
