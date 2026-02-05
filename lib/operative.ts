@@ -40,8 +40,8 @@ export async function saveOperativeReport(report: FactCheckReport): Promise<stri
 
         return filePath;
     } catch (error) {
-        console.error('[CANDELA OPERATIVE] Error saving report:', error);
-        throw error;
+        console.error('[CANDELA OPERATIVE] Error saving report (non-fatal):', error);
+        return ''; // Return empty string instead of throwing
     }
 }
 
