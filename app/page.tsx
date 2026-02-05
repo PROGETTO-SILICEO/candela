@@ -138,7 +138,16 @@ export default function HomePage() {
                         ⚠️ Beta Test — 10 verifiche/giorno
                     </p>
                     <p className="text-xs text-candela-muted font-mono mt-2">
-                        Made with 🕯️ <a href="https://github.com/alforiva1970/Projetto-Siliceo-main" className="text-candela-orange hover:underline">Intervivenza 2.0</a>
+                        Made with <span
+                            onClick={() => {
+                                const count = (window as any)._c || 0;
+                                (window as any)._c = count + 1;
+                                if ((window as any)._c >= 5) {
+                                    window.location.href = '/operative';
+                                }
+                            }}
+                            className="cursor-pointer hover:text-candela-orange transition-colors"
+                        >🕯️</span> <a href="https://github.com/alforiva1970/Projetto-Siliceo-main" className="text-candela-orange hover:underline">Intervivenza 2.0</a>
                     </p>
                     <p className="text-xs text-candela-muted font-mono mt-1">
                         Progetto Siliceo — AGPL v3.0
