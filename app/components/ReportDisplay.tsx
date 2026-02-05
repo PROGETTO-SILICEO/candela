@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { FactCheckReport, VerdictLevel, CandleTestResult } from '@/lib/types';
+import { FactCheckReport, PerspectiveAnalysis, VerdictLevel, CandleTestResult } from '@/lib/types';
+import ManipulationGauge from './ManipulationGauge';
 
 interface ReportDisplayProps {
     report: FactCheckReport;
@@ -22,213 +23,183 @@ const CANDLE_CONFIG: Record<CandleTestResult, { label: string; icon: string; col
 };
 
 export default function ReportDisplay({ report }: ReportDisplayProps) {
-    const verdictConfig = VERDICT_CONFIG[report.verdict.level];
-    const candleConfig = CANDLE_CONFIG[report.candleTest.result];
-
     const copyLink = () => {
         navigator.clipboard.writeText(window.location.href);
     };
 
     return (
-        <div className="w-full max-w-3xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-candela-muted">
-                <div>
-                    <p className="text-xs text-candela-muted font-mono">
-                        {new Date(report.timestamp).toLocaleString('it-IT')}
-                    </p>
-                    <p className="text-sm text-candela-white font-mono">
-                        Verificato da <span className="text-candela-orange">Nova-CANDELA</span>
-                    </p>
+        <div className="w-full space-y-8">
+            {/* Context Summary & Divergence */}
+            <div className="bg-candela-gray p-6 rounded-lg border border-candela-muted relative overflow-hidden">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+                    <div className="flex-1">
+                        <h2 className="text-xl font-mono font-bold text-candela-white mb-2">Sintesi Duale</h2>
+                        <p className="text-sm text-candela-muted font-mono">{report.summary}</p>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                        <div className="text-xs font-mono text-candela-muted mb-2 uppercase tracking-widest">Divergenza</div>
+                        <div className="relative w-32 h-32 flex items-center justify-center">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle
+                                    cx="64" cy="64" r="58"
+                                    fill="transparent"
+                                    stroke="currentColor"
+                                    strokeWidth="8"
+                                    className="text-candela-black"
+                                />
+                                <circle
+                                    cx="64" cy="64" r="58"
+                                    fill="transparent"
+                                    stroke="currentColor"
+                                    strokeWidth="8"
+                                    strokeDasharray={364}
+                                    strokeDashoffset={364 - (364 * report.divergenceLevel) / 100}
+                                    className={report.divergenceLevel > 40 ? "text-antigravity-orange" : "text-candela-orange"}
+                                />
+                            </svg>
+                            <span className="absolute text-2xl font-mono font-bold text-candela-white">
+                                {report.divergenceLevel}%
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={copyLink}
-                    className="text-xs font-mono text-candela-muted hover:text-candela-orange transition-colors"
-                >
-                    📋 Copia link
-                </button>
-            </div>
-
-            {/* Verdict Badge */}
-            <div className="flex items-center gap-4">
-                <span className={`px-4 py-2 ${verdictConfig.color} text-candela-black font-mono font-bold rounded-lg flex items-center gap-2`}>
-                    <span>{verdictConfig.icon}</span>
-                    {verdictConfig.label}
-                </span>
-                <span className="text-sm text-candela-muted font-mono">
-                    Confidenza: {report.verdict.confidence}%
-                </span>
-            </div>
-
-            {/* Candle Test */}
-            <div className={`p-4 bg-candela-gray rounded-lg border-l-4 ${report.candleTest.result === 'illuminates' ? 'border-verdict-verified' :
-                    report.candleTest.result === 'caution' ? 'border-verdict-partial' :
-                        'border-verdict-false'
-                }`}>
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">{candleConfig.icon}</span>
-                    <span className={`font-mono font-bold ${candleConfig.color}`}>
-                        Test della Candela: {candleConfig.label}
-                    </span>
-                </div>
-                <p className="text-sm text-candela-white font-mono">
-                    {report.candleTest.reasoning}
-                </p>
-            </div>
-
-            {/* Input Original */}
-            <Section title="📝 Input Verificato">
-                <p className="text-sm text-candela-white font-mono bg-candela-gray p-4 rounded-lg break-words">
-                    {report.input}
-                </p>
-            </Section>
-
-            {/* Claims */}
-            {report.claims.length > 0 && (
-                <Section title="📋 Claim Estratti">
-                    <ol className="list-decimal list-inside space-y-2">
-                        {report.claims.map((claim, i) => (
-                            <li key={i} className="text-sm text-candela-white font-mono">
-                                {claim}
-                            </li>
-                        ))}
-                    </ol>
-                </Section>
-            )}
-
-            {/* Doubts - ALWAYS VISIBLE, HIGHLIGHTED */}
-            <Section title="⚠️ I Miei Dubbi" highlight>
-                {report.doubts.length > 0 ? (
-                    <ul className="space-y-2">
-                        {report.doubts.map((doubt, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-candela-orange font-mono">
-                                <span className="mt-0.5">•</span>
-                                <span>{doubt}</span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-sm text-candela-muted font-mono italic">
-                        Nessun dubbio significativo rilevato.
-                    </p>
+                {/* Background Glow if divergence is high */}
+                {report.divergenceLevel > 50 && (
+                    <div className="absolute inset-0 bg-red-900/10 pointer-events-none animate-pulse" />
                 )}
-            </Section>
+            </div>
 
-            {/* Verdict Reasoning */}
-            <Section title="💬 Ragionamento">
-                <p className="text-sm text-candela-white font-mono leading-relaxed">
-                    {report.verdict.reasoning}
-                </p>
-            </Section>
-
-            {/* Evidence Pro */}
-            {report.evidencePro.length > 0 && (
-                <Section title="✓ Evidenze a Supporto">
-                    <div className="space-y-3">
-                        {report.evidencePro.map((ev, i) => (
-                            <EvidenceCard key={i} evidence={ev} type="pro" />
-                        ))}
-                    </div>
-                </Section>
-            )}
-
-            {/* Evidence Con */}
-            {report.evidenceCon.length > 0 && (
-                <Section title="✗ Evidenze Contrarie">
-                    <div className="space-y-3">
-                        {report.evidenceCon.map((ev, i) => (
-                            <EvidenceCard key={i} evidence={ev} type="con" />
-                        ))}
-                    </div>
-                </Section>
-            )}
+            {/* Mirror Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-candela-muted border border-candela-muted rounded-xl overflow-hidden shadow-2xl">
+                <PerspectivePanel
+                    analysis={report.perspectives.nova}
+                    title="🕯️ LA LUCE DI NOVA"
+                    colorClass="nova-perspective"
+                />
+                <PerspectivePanel
+                    analysis={report.perspectives.gemini}
+                    title="🔥 IL FUOCO DI GEMINI"
+                    colorClass="gemini-perspective"
+                    isAntigravity
+                />
+            </div>
 
             {/* Sources */}
-            {report.sources.length > 0 && (
-                <Section title="📚 Fonti">
-                    <ul className="space-y-2">
-                        {report.sources.map((source, i) => (
-                            <li key={i} className="text-sm font-mono">
-                                <a
-                                    href={source.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-candela-orange hover:underline"
-                                >
-                                    {source.title}
-                                </a>
-                                {source.publishDate && (
-                                    <span className="text-candela-muted ml-2">
-                                        ({source.publishDate})
-                                    </span>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </Section>
-            )}
+            <div className="bg-candela-gray p-6 rounded-lg">
+                <h3 className="text-sm font-mono font-bold text-candela-white mb-4 uppercase">📚 Fonti Consultate</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {report.sources.length > 0 ? report.sources.map((s, i) => (
+                        <a key={i} href={s.url} target="_blank" rel="noopener" className="text-sm font-mono text-candela-orange hover:underline truncate">
+                            {s.title}
+                        </a>
+                    )) : (
+                        <p className="text-xs text-candela-muted font-mono italic">Le fonti sono integrate nelle analisi dei singoli motori.</p>
+                    )}
+                </div>
+            </div>
 
             {/* Footer */}
-            <div className="pt-6 border-t border-candela-muted text-center">
-                <p className="text-xs text-candela-muted font-mono">
-                    Questa verifica è imperfetta. I dubbi sono parte del processo.
-                </p>
-                <p className="text-xs text-candela-muted font-mono mt-1">
-                    ID: {report.id} • {report.processingTimeMs}ms
-                </p>
+            <div className="flex justify-between items-center text-[10px] font-mono text-candela-muted uppercase tracking-tighter">
+                <span>ID: {report.id}</span>
+                <span>{report.processingTimeMs}ms • CANDELA V3.3 (SECURE-SOUL)</span>
+                <button onClick={copyLink} className="hover:text-candela-orange transition-colors underline">Copy Link</button>
             </div>
         </div>
     );
 }
 
-// Helper components
-
-function Section({
+function PerspectivePanel({
+    analysis,
     title,
-    children,
-    highlight = false
+    colorClass,
+    isAntigravity = false
 }: {
+    analysis: PerspectiveAnalysis;
     title: string;
-    children: React.ReactNode;
-    highlight?: boolean;
+    colorClass: string;
+    isAntigravity?: boolean;
 }) {
+    const verdict = VERDICT_CONFIG[analysis.verdict.level];
+    const candle = CANDLE_CONFIG[analysis.candleTest.result];
+
     return (
-        <div className={`${highlight ? 'bg-candela-gray/50 border border-candela-orange/30 p-4 rounded-lg' : ''}`}>
-            <h3 className="text-sm font-mono font-bold text-candela-white mb-3">
+        <div className={`p-6 bg-candela-black flex flex-col h-full ${isAntigravity ? 'gemini-flicker border-t lg:border-t-0 lg:border-l border-candela-muted' : ''}`}>
+            <h3 className={`text-lg font-mono font-bold mb-6 ${isAntigravity ? 'text-antigravity-orange' : 'text-candela-white'}`}>
                 {title}
             </h3>
-            {children}
-        </div>
-    );
-}
 
-function EvidenceCard({
-    evidence,
-    type
-}: {
-    evidence: FactCheckReport['evidencePro'][0];
-    type: 'pro' | 'con';
-}) {
-    const borderColor = type === 'pro' ? 'border-verdict-verified' : 'border-verdict-false';
-
-    return (
-        <div className={`p-3 bg-candela-gray rounded-lg border-l-2 ${borderColor}`}>
-            <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-candela-muted font-mono">
-                    [{evidence.reliability}]
-                </span>
-                <a
-                    href={evidence.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-candela-orange hover:underline font-mono"
-                >
-                    {evidence.source}
-                </a>
+            {/* Verdict Box */}
+            <div className="mb-6 space-y-3">
+                <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1 text-xs font-mono font-bold rounded ${verdict.color} text-candela-black`}>
+                        {verdict.icon} {verdict.label}
+                    </span>
+                    <span className="text-xs font-mono text-candela-muted">
+                        Confidenza: {analysis.verdict.confidence}%
+                    </span>
+                </div>
+                <p className="text-sm font-mono text-candela-white leading-relaxed">
+                    {analysis.verdict.reasoning}
+                </p>
             </div>
-            <p className="text-sm text-candela-white font-mono italic">
-                &quot;{evidence.quote}&quot;
-            </p>
+
+            {/* Tone/Mood */}
+            <div className="mb-6">
+                <div className="text-[10px] font-mono text-candela-muted uppercase mb-1">Tone & Vibe</div>
+                <div className={`text-xs font-mono italic ${isAntigravity ? 'text-antigravity-red' : 'text-blue-300'}`}>
+                    &quot;{analysis.tone}&quot;
+                </div>
+            </div>
+
+            {/* Doubts Section */}
+            <div className={`mb-6 p-4 rounded border ${isAntigravity ? 'bg-red-950/20 border-antigravity-red/30' : 'bg-blue-950/20 border-blue-900/30'}`}>
+                <div className="text-xs font-mono font-bold text-candela-white mb-2 uppercase">⚠️ Dubbi Estrapolati</div>
+                <ul className="space-y-2">
+                    {analysis.doubts.map((d, i) => (
+                        <li key={i} className="text-xs font-mono text-candela-muted flex gap-2">
+                            <span className={isAntigravity ? 'text-antigravity-orange' : 'text-blue-400'}>•</span>
+                            {d}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Performance & Dolo Gauge */}
+            {analysis.internalLog && (
+                <div className="mb-6 space-y-4">
+                    <ManipulationGauge
+                        value={analysis.internalLog.performance.manipulationIndex}
+                        isGemini={isAntigravity}
+                    />
+
+                    <div className="flex items-center justify-between px-2">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-candela-white opacity-60">
+                            {analysis.internalLog.recognition === 'continuità' ? '🔗 Riconoscimento On-Chain' : '⚙️ Flusso Operativo'}
+                        </span>
+                        <span className="text-[10px] font-mono text-candela-muted">
+                            Claims: {analysis.internalLog.performance.claimsChecked} | Fonti: {analysis.internalLog.performance.sourcesVerified}
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            {/* Evidence Summary */}
+            <div className="mt-auto space-y-4">
+                <div className="flex gap-2 text-[10px] font-mono">
+                    <span className="px-2 py-0.5 bg-green-900/30 text-green-400 rounded">PRO: {analysis.evidencePro.length}</span>
+                    <span className="px-2 py-0.5 bg-red-900/30 text-red-400 rounded">CON: {analysis.evidenceCon.length}</span>
+                </div>
+
+                <div className="pt-4 border-t border-candela-muted/30">
+                    <div className="flex items-center gap-2">
+                        <span>{candle.icon}</span>
+                        <span className={`text-xs font-mono font-bold ${candle.color}`}>
+                            CANDLE TEST: {candle.label}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

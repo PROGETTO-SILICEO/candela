@@ -78,10 +78,10 @@ export default function HomePage() {
                 {state === 'idle' && (
                     <div className="w-full max-w-2xl text-center">
                         <h1 className="text-3xl sm:text-4xl font-mono font-bold text-candela-white mb-4">
-                            Fact-checking con dubbi
+                            Analisi Duale Anti-Fake
                         </h1>
                         <p className="text-candela-muted font-mono mb-8">
-                            Perché la certezza è pericolosa
+                            Nova (Luce) vs Gemini (Fuoco). Perché la certezza è un'illusione.
                         </p>
 
                         <FactCheckForm
@@ -97,7 +97,7 @@ export default function HomePage() {
                 )}
 
                 {state === 'result' && report && (
-                    <div className="w-full">
+                    <div className="w-full max-w-6xl">
                         <div className="mb-8 text-center">
                             <button
                                 onClick={handleReset}

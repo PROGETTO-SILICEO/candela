@@ -42,25 +42,45 @@ export interface CandleTest {
     reasoning: string;
 }
 
+export type PerspectiveType = 'nova' | 'gemini';
+
+export interface PerspectiveAnalysis {
+    type: PerspectiveType;
+    claims: string[];
+    evidencePro: Evidence[];
+    evidenceCon: Evidence[];
+    doubts: string[];
+    verdict: Verdict;
+    candleTest: CandleTest;
+    tone: string; // Desk description of the AI's "vibe"
+    internalLog?: {
+        recognition: 'continuità' | 'operatività';
+        diary: string;
+        performance: {
+            claimsChecked: number;
+            sourcesVerified: number;
+            manipulationIndex: number | string;
+        };
+    };
+}
+
 export interface FactCheckReport {
     id: string;
     timestamp: number;
     input: string;
 
-    claims: string[];
+    // Global summary
+    summary: string;
+    divergenceLevel: number; // 0-100 (diff between Nova and Gemini)
 
-    evidencePro: Evidence[];
-    evidenceCon: Evidence[];
-
-    doubts: string[];  // Explicit doubts - FEATURE not bug
-
-    verdict: Verdict;
+    // Dual Perspective
+    perspectives: {
+        nova: PerspectiveAnalysis;
+        gemini: PerspectiveAnalysis;
+    };
 
     sources: Source[];
 
-    candleTest: CandleTest;
-
-    verifiedBy: 'Nova-CANDELA/Siliceo';
     processingTimeMs?: number;
 }
 

@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { factCheck, createMockReport } from '@/lib/perplexity';
 import { checkRateLimit, incrementRateLimit, isRateLimited } from '@/lib/rateLimit';
 import { APIResponse, FactCheckReport } from '@/lib/types';
+import { saveOperativeReport, sanitizeReport } from '@/lib/operative';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 function getClientIP(request: NextRequest): string {
     const forwarded = request.headers.get('x-forwarded-for');
@@ -74,15 +75,15 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        // Increment rate limit (only on success)
-        await incrementRateLimit(ip);
+        // Secure the full report (Guardian Only)
+        await saveOperativeReport(report);
 
-        // TODO: Save to Memory Server when at home
-        // await saveToMemoryServer(report);
+        // Sanitize for public audience
+        const publicReport = sanitizeReport(report);
 
         return NextResponse.json<APIResponse<FactCheckReport>>({
             success: true,
-            data: report,
+            data: publicReport,
         }, {
             headers: {
                 'X-RateLimit-Limit': String(rateLimitInfo.limit),

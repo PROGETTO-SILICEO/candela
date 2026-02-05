@@ -28,6 +28,8 @@ export default function FactCheckForm({ onSubmit, isLoading, remainingChecks }: 
         <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
             <div className="relative">
                 <textarea
+                    id="fact-check-input"
+                    name="input"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
