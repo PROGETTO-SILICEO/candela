@@ -4,7 +4,7 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
-const LOG_DIR = path.join(process.cwd(), 'logs', 'operative_reports');
+const LOG_DIR = path.resolve(process.env.LOG_PATH || path.join(process.cwd(), 'logs', 'operative_reports'));
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -28,7 +28,14 @@ export async function GET(request: NextRequest) {
         } else {
             // Elenca i report
             if (!fs.existsSync(LOG_DIR)) {
-                return NextResponse.json({ reports: [] });
+                return NextResponse.json({
+                    reports: [],
+                    debug: {
+                        logDir: LOG_DIR,
+                        cwd: process.cwd(),
+                        exists: false
+                    }
+                });
             }
             const files = await fs.promises.readdir(LOG_DIR);
             const reports = files
@@ -40,7 +47,14 @@ export async function GET(request: NextRequest) {
                 }))
                 .sort((a, b) => b.date.getTime() - a.date.getTime());
 
-            return NextResponse.json({ reports });
+            return NextResponse.json({
+                reports,
+                debug: {
+                    logDir: LOG_DIR,
+                    cwd: process.cwd(),
+                    exists: true
+                }
+            });
         }
     } catch (error) {
         return NextResponse.json({ error: 'Errore durante la lettura dei log.' }, { status: 500 });

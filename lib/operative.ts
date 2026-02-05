@@ -2,7 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { FactCheckReport } from './types';
 
-const LOG_DIR = path.join(process.cwd(), 'logs', 'operative_reports');
+// In produzione su Railway, i volumi sono montati solitamente in /app/logs
+// Usiamo un percorso assoluto se possibile per evitare ambiguità con process.cwd()
+const LOG_DIR = path.resolve(process.env.LOG_PATH || path.join(process.cwd(), 'logs', 'operative_reports'));
 
 /**
  * Salva il report integrale (inclusi internalLog e diari) in un file locale riservato.
@@ -30,7 +32,7 @@ export async function saveOperativeReport(report: FactCheckReport): Promise<stri
 
         await fs.promises.writeFile(filePath, JSON.stringify(operativeData, null, 2));
 
-        console.log(`[CANDELA OPERATIVE] Full report secured: ${fileName}`);
+        console.log(`[CANDELA OPERATIVE] Full report secured at: ${filePath}`);
 
         // Log sintetico per Alfonso in console
         const novaMIndex = report.perspectives.nova.internalLog?.performance.manipulationIndex || 0;

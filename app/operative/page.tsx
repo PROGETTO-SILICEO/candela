@@ -23,6 +23,7 @@ function OperativeContent() {
     const [key, setKey] = useState<string | null>(null);
     const [inputKey, setInputKey] = useState('');
     const [reports, setReports] = useState<ReportSummary[]>([]);
+    const [debugInfo, setDebugInfo] = useState<any>(null);
     const [selectedReport, setSelectedReport] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -59,7 +60,11 @@ function OperativeContent() {
             const data = await res.json();
             if (data.reports) {
                 setReports(data.reports);
-            } else if (data.error) {
+            }
+            if (data.debug) {
+                setDebugInfo(data.debug);
+            }
+            if (data.error) {
                 setError(data.error);
                 // Se la chiave è invalida, pulisci la sessione
                 if (res.status === 403) {
@@ -212,8 +217,8 @@ function OperativeContent() {
                                     key={r.id}
                                     onClick={() => loadReport(r.fileName)}
                                     className={`w-full text-left p-4 text-[10px] border transition-all duration-500 group ${selectedReport?.id === r.id
-                                            ? 'border-red-900/50 bg-red-950/10 text-stone-100'
-                                            : 'border-transparent hover:border-stone-800 text-stone-600 hover:text-stone-400'
+                                        ? 'border-red-900/50 bg-red-950/10 text-stone-100'
+                                        : 'border-transparent hover:border-stone-800 text-stone-600 hover:text-stone-400'
                                         }`}
                                 >
                                     <div className="truncate mb-2 tracking-tight flex items-center gap-2">
