@@ -153,7 +153,7 @@ function OperativeContent() {
 
     // --- VIEW: DASHBOARD ---
     return (
-        <div className="min-h-screen bg-[#050505] text-stone-400 font-mono p-4 md:p-12 selection:bg-red-900 selection:text-white relative overflow-hidden">
+        <div className="min-h-screen bg-[#0a0a0a] text-stone-400 font-mono p-4 md:p-12 selection:bg-red-900 selection:text-white relative overflow-hidden">
             {/* Sfondo con pattern sottile */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4v-4H4v4H0v2h4v4h2v-4h4v-2H6zM36 4v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}></div>
 
@@ -220,17 +220,7 @@ function OperativeContent() {
                     <div className="border border-stone-900 bg-black/40 p-2 h-[65vh] overflow-y-auto custom-scrollbar shadow-inner">
                         {reports.length === 0 && !loading && (
                             <div className="space-y-6 p-8">
-                                <div className="text-stone-800 text-[10px] italic text-center uppercase tracking-[0.3em] border border-stone-900 p-8">Nessun frammento rilevato</div>
-                                {debugInfo && (
-                                    <div className="p-5 bg-stone-950/50 border border-stone-900 space-y-3 rounded-sm opacity-50 hover:opacity-100 transition-opacity">
-                                        <div className="text-[9px] text-stone-600 uppercase font-bold tracking-widest border-b border-stone-900 pb-2">Diagnostica Volume</div>
-                                        <div className="text-[9px] text-stone-800 break-all leading-relaxed font-mono space-y-1">
-                                            <p><span className="text-stone-600">PATH:</span> {debugInfo.logDir}</p>
-                                            <p><span className="text-stone-600">CWD:</span> {debugInfo.cwd}</p>
-                                            <p><span className="text-stone-600">DISK:</span> {debugInfo.exists ? 'ALLINEATO' : 'MANCANTE'}</p>
-                                        </div>
-                                    </div>
-                                )}
+                                <div className="text-stone-700 text-[10px] italic text-center uppercase tracking-[0.3em] border border-stone-900/50 p-8">Nessun frammento rilevato</div>
                             </div>
                         )}
                         <div className="space-y-1 mt-2">
