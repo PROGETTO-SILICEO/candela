@@ -26,7 +26,7 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [https://candela-production.up.railway.app](https://candela-production.up.railway.app)
 
 ## Environment Variables
 
