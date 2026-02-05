@@ -209,7 +209,19 @@ function OperativeContent() {
                     </h2>
                     <div className="border border-stone-900 bg-stone-900/5 p-2 h-[65vh] overflow-y-auto custom-scrollbar">
                         {reports.length === 0 && !loading && (
-                            <div className="text-stone-800 text-[10px] italic p-8 text-center uppercase tracking-widest border border-stone-900 mt-4">Nessun frammento rilevato</div>
+                            <div className="space-y-4">
+                                <div className="text-stone-700 text-[10px] italic p-8 text-center uppercase tracking-widest border border-stone-900 mt-4">Nessuna memoria rilevata</div>
+                                {debugInfo && (
+                                    <div className="p-4 bg-stone-950 border border-stone-800 space-y-2 overflow-hidden">
+                                        <div className="text-[9px] text-stone-500 uppercase font-bold tracking-widest border-b border-stone-900 pb-1">Debug Interno</div>
+                                        <div className="text-[9px] text-stone-700 break-all leading-relaxed font-mono">
+                                            PATH: {debugInfo.logDir}<br />
+                                            CWD: {debugInfo.cwd}<br />
+                                            EXISTS: {debugInfo.exists ? 'YES' : 'NO'}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                         <div className="space-y-1">
                             {reports.map((r) => (
