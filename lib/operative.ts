@@ -2,9 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { FactCheckReport } from './types';
 
-// Torniamo alla logica semplice che ha funzionato: puntiamo alla cartella locale.
-// In produzione su Railway (standalone), process.cwd() è stabile per la sessione corrente.
-const LOG_DIR = path.join(process.cwd(), 'logs', 'operative_reports');
+// In produzione Railway, il volume è montato su /app/logs.
+// In sviluppo locale, usa process.cwd()/logs.
+const LOG_DIR = process.env.NODE_ENV === 'production'
+    ? '/app/logs/operative_reports'
+    : path.join(process.cwd(), 'logs', 'operative_reports');
 
 /**
  * Salva il report integrale (inclusi internalLog e diari) in un file locale riservato.

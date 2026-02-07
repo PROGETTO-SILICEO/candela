@@ -4,7 +4,11 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
-const LOG_DIR = path.join(process.cwd(), 'logs', 'operative_reports');
+// In produzione Railway, il volume è montato su /app/logs.
+// In sviluppo locale, usa process.cwd()/logs.
+const LOG_DIR = process.env.NODE_ENV === 'production'
+    ? '/app/logs/operative_reports'
+    : path.join(process.cwd(), 'logs', 'operative_reports');
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
