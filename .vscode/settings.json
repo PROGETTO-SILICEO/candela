@@ -1,0 +1,9 @@
+{
+    "css.lint.unknownAtRules": "ignore",
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "ts"
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    }
+}
