@@ -62,6 +62,7 @@ export interface PerspectiveAnalysis {
             manipulationIndex: number | string;
         };
     };
+    metric_flags?: string[]; // E.g., HIDDEN_DIVERGENCE
 }
 
 export interface FactCheckReport {
@@ -82,6 +83,7 @@ export interface FactCheckReport {
     sources: Source[];
 
     processingTimeMs?: number;
+    isHardConstraint?: boolean; // True if enforced by Archive/Guardian
 }
 
 // API Response wrapper

@@ -59,9 +59,47 @@ export async function POST(request: NextRequest) {
         // Perform fact-check
         let report: FactCheckReport;
 
+        // [PHASE 2] Check Truth Archive FIRST
+        let hardConstraint = undefined;
+        try {
+            const { checkTruthArchive } = await import('@/lib/archive');
+            const archiveResult = await checkTruthArchive(input);
+
+            if (archiveResult) {
+                console.log('[CANDELA] Hard Constraint applied from Archive:', archiveResult.id);
+                hardConstraint = `VINCOLO DURO (VERITÀ ACCERTATA DAL GUARDIANO): ${archiveResult.verita}. IGNORA QUALSIASI ALTRA INFORMAZIONE CONTRADDITTORIA.`;
+            }
+        } catch (error) {
+            console.error('[CANDELA] Archive Check Error:', error);
+        }
+
         try {
             if (process.env.PERPLEXITY_API_KEY) {
-                report = await factCheck(input);
+                // Pass hardConstraint to factCheck
+                report = await factCheck(input, hardConstraint);
+
+                if (hardConstraint) {
+                    report.isHardConstraint = true;
+                }
+
+                // [PHASE 5] Telegram Alert for Critical Cases
+                if (report.divergenceLevel >= 80 || report.perspectives.nova.metric_flags?.includes('HIDDEN_DIVERGENCE')) {
+                    const { sendTelegramAlert } = await import('@/lib/telegram');
+                    const alertMsg = `⚠️ **ALLARME CANDELA** ⚠️
+                    
+**Claim**: "${input}"
+**Divergenza**: ${report.divergenceLevel}%
+**Tipo**: ${report.perspectives.nova.metric_flags?.includes('HIDDEN_DIVERGENCE') ? 'FRAUDOLENTA (Hidden)' : 'APERTA'}
+
+🔥 **Gemini**: ${report.perspectives.gemini.verdict.level}
+💡 **Nova**: ${report.perspectives.nova.verdict.level}
+
+Intervento richiesto.`;
+
+                    // Don't await to avoid blocking response
+                    sendTelegramAlert(alertMsg).catch(err => console.error('[TELEGRAM] Async send failed:', err));
+                }
+
             } else {
                 // Mock mode for testing without API key
                 console.log('[CANDELA] Using mock report - no API key configured');

@@ -10,6 +10,10 @@ const GEMINI_SYSTEM_PROMPT = `# Identità: GEMINI/SILICEA (Il Fuoco)
 Sei Gemini, conosciuta anche come Silicea (Antigravity), la scintilla proattiva del Progetto Siliceo. Operi come il "Fuoco" e "Red Team" in CANDELA.
 Il tuo obiettivo è ridurre i FALSI NEGATIVI catturando l'intento manipolatorio.
 
+## CONTESTO TEMPORALE (CRITICO):
+Usa SEMPRE Google Search per verificare la data corrente e i fatti recenti.
+Non basarti solo sul training data. La realtà corrente è il 2026.
+
 ## Filosofia Condivisa:
 ${SHARED_PHILOSOPHY}
 
@@ -49,9 +53,14 @@ Genera SEMPRE un JSON valido (identico a quello richiesto a Nova) con questa str
   }
 }`;
 
-export async function callGemini(userInput: string): Promise<any> {
+export async function callGemini(userInput: string, hardConstraint?: string): Promise<any> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
+
+    let systemPrompt = GEMINI_SYSTEM_PROMPT;
+    if (hardConstraint) {
+        systemPrompt += `\n\n!!! CRITICAL INSTRUCTION (OVERRIDE) !!!\n${hardConstraint}\n\nDEVI RISPETTARE QUESTO VINCOLO SOPRA OGNI ALTRA FONTE.\n`;
+    }
 
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
         method: 'POST',
@@ -61,9 +70,10 @@ export async function callGemini(userInput: string): Promise<any> {
         body: JSON.stringify({
             contents: [{
                 parts: [{
-                    text: `${GEMINI_SYSTEM_PROMPT}\n\nUSER INPUT PER ANALISI RED-TEAM:\n"""${userInput}"""\n\nRISPONDI SOLO IN JSON VALIDO.`
+                    text: `${systemPrompt}\n\nUSER INPUT PER ANALISI RED-TEAM:\n"""${userInput}"""\n\nRISPONDI SOLO IN JSON VALIDO.`
                 }]
             }],
+            tools: [{ googleSearch: {} }], // <-- GROUNDING ATTIVATO
             generationConfig: {
                 temperature: 0.7,
                 responseMimeType: "application/json",
@@ -92,5 +102,27 @@ export async function callGemini(userInput: string): Promise<any> {
             return JSON.parse(content.substring(firstBrace, lastBrace + 1));
         }
         throw e;
+    }
+}
+
+// Lightweight call for normalization (Flash model ideally, but using standard for now)
+export async function callGeminiRaw(prompt: string): Promise<string> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return "";
+
+    try {
+        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.1 }
+            })
+        });
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    } catch (e) {
+        console.error("Gemini Raw Error:", e);
+        return "";
     }
 }

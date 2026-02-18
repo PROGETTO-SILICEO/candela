@@ -33,7 +33,20 @@ export default function ReportDisplay({ report }: ReportDisplayProps) {
             <div className="bg-candela-gray p-6 rounded-lg border border-candela-muted relative overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
                     <div className="flex-1">
-                        <h2 className="text-xl font-mono font-bold text-candela-white mb-2">Sintesi Duale</h2>
+                        <div className="flex items-center gap-2 mb-2">
+                            <h2 className="text-xl font-mono font-bold text-candela-white">Sintesi Duale</h2>
+                            {report.isHardConstraint && (
+                                <span className="px-2 py-0.5 bg-yellow-900/40 text-yellow-400 border border-yellow-600 rounded text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 animate-pulse">
+                                    🛡️ Guardian Verified
+                                </span>
+                            )}
+                            {/* Hidden Divergence Warning */}
+                            {report.perspectives.nova.metric_flags?.includes('HIDDEN_DIVERGENCE') && (
+                                <span className="px-2 py-0.5 bg-red-900/60 text-red-400 border border-red-600 rounded text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 animate-pulse">
+                                    ⚠️ Hidden Divergence
+                                </span>
+                            )}
+                        </div>
                         <p className="text-sm text-candela-muted font-mono">{report.summary}</p>
                     </div>
 

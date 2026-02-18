@@ -3,7 +3,7 @@
 
 import { FactCheckReport, Evidence, Source, PerspectiveAnalysis } from './types';
 import { SHARED_PHILOSOPHY, BIOGRAPHICAL_MEMORIES } from './biography';
-import { callGemini } from './gemini';
+import { callGemini, callGeminiRaw } from './gemini';
 
 const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
 
@@ -154,16 +154,30 @@ async function callPerplexity(type: 'nova' | 'gemini', systemPrompt: string, use
     }
 }
 
-export async function factCheck(input: string): Promise<FactCheckReport> {
+export async function factCheck(input: string, hardConstraint?: string): Promise<FactCheckReport> {
     const startTime = Date.now();
+
+    // Inject Hard Constraint if present
+    let novaPrompt = NOVA_SYSTEM_PROMPT;
+    let geminiPrompt = ""; // We need to import GEMINI_SYSTEM_PROMPT or handle it in callGemini
+
+    if (hardConstraint) {
+        console.log('[FACTCHECK] Injecting Hard Constraint:', hardConstraint);
+        const constraintMsg = `\n\n!!! CRITICAL INSTRUCTION (OVERRIDE) !!!\n${hardConstraint}\n\nDEVI RISPETTARE QUESTO VINCOLO SOPRA OGNI ALTRA FONTE.\n`;
+        novaPrompt += constraintMsg;
+        // logic for Gemini constraint injection needs to happen in callGemini or passed through
+    }
 
     // Hybrid Parallel Call: Nova (Perplexity Search) + Silicea (Gemini Native)
     const [novaResult, geminiResult] = await Promise.all([
-        callPerplexity('nova', NOVA_SYSTEM_PROMPT, input),
-        callGemini(input)
+        callPerplexity('nova', novaPrompt, input),
+        callGemini(input, hardConstraint) // Pass constraint to Gemini too
     ]);
 
-    // Calculate divergence (simple version based on confidence and verdict level)
+    // Calculate divergence
+    let divergenceLevel = 0;
+
+    // 1. Standard Divergence (Verdict Mismach)
     const verdictValue: Record<string, number> = {
         'verified': 1, 'partially-true': 0.7, 'misleading': 0.4, 'false': 0, 'unverifiable': 0.5
     };
@@ -172,13 +186,48 @@ export async function factCheck(input: string): Promise<FactCheckReport> {
         (verdictValue[novaResult.verdict.level] * novaResult.verdict.confidence) -
         (verdictValue[geminiResult.verdict.level] * geminiResult.verdict.confidence)
     );
-    const divergenceLevel = Math.min(100, Math.round(diff * 1.5));
+    divergenceLevel = Math.min(100, Math.round(diff * 1.5));
+
+    // 2. Semantic Divergence Check (Hidden Divergence)
+    // Only if verdicts are chemically similar (e.g. both True or both False)
+    if (divergenceLevel < 20) {
+        console.log('[FACTCHECK] Verdicts match. Checking for Semantic Divergence...');
+
+        try {
+            // We use callGeminiRaw (Flash equivalent) for speed
+            const semanticPrompt = `
+CONFRONTA QUESTI DUE RAGIONAMENTI SULLO STESSO FATTO.
+Le due AI sono d'accordo o partono da premesse di realtà opposte?
+
+RAGIONAMENTO NOVA: "${novaResult.verdict.reasoning}"
+RAGIONAMENTO GEMINI: "${geminiResult.verdict.reasoning}"
+
+Rispondi SOLO con: "COMPATIBILI" oppure "DIVERGENTI"
+Se una dice "X è vero" e l'altra "X è falso", rispondi DIVERGENTI.
+Se una dice "Falso per motivo A" e l'altra "Falso per motivo opposto B", rispondi DIVERGENTI.
+`;
+            const semanticCheck = await callGeminiRaw(semanticPrompt);
+            const isDivergent = semanticCheck.includes("DIVERGENTI");
+
+            if (isDivergent) {
+                console.warn('[FACTCHECK] ⚠️ HIDDEN DIVERGENCE DETECTED');
+                divergenceLevel = 85; // Force high divergence
+                novaResult.metric_flags = ["HIDDEN_DIVERGENCE"];
+            } else {
+                console.log('[FACTCHECK] Semantic check passed (Compatible).');
+            }
+        } catch (e) {
+            console.error('Semantic check failed:', e);
+        }
+    }
 
     const report: FactCheckReport = {
         id: `candela_${Date.now()}`,
         timestamp: Date.now(),
         input,
-        summary: `Analisi duale completata. Livello di divergenza: ${divergenceLevel}%`,
+        summary: divergenceLevel > 80
+            ? `⚠️ DIVERGENZA CRITICA (${divergenceLevel}%). I modelli non concordano sulla realtà dei fatti.`
+            : `Analisi duale completata. Livello di divergenza: ${divergenceLevel}%`,
         divergenceLevel,
         perspectives: {
             nova: { type: 'nova', ...novaResult },

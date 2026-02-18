@@ -1,0 +1,13 @@
+[
+    {
+        "id": "FATTO-001",
+        "claim_normalizzato": "presidente usa stati uniti 2026",
+        "verita": "Donald Trump, rieletto nel novembre 2024, è il Presidente degli Stati Uniti in carica dal 20 gennaio 2025.",
+        "categoria": "politica",
+        "fonte_primaria": "Guardian Override",
+        "deciso_da": "guardiano",
+        "data_accertamento": "2026-02-17T23:00:00Z",
+        "valido_fino": "2029-01-20T00:00:00Z",
+        "note_guardiano": "Vincolo duro per correggere allucinazioni temporali."
+    }
+]
