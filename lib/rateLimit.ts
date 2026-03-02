@@ -4,7 +4,6 @@
 // NOTE: Requires Vercel KV setup at home
 // For local dev without KV, returns mock responses
 
-import { kv } from '@vercel/kv';
 import { RateLimitInfo } from './types';
 
 const DAILY_LIMIT = 10;
@@ -30,6 +29,7 @@ export async function checkRateLimit(ip: string): Promise<RateLimitInfo> {
     }
 
     try {
+        const { kv } = await import('@vercel/kv');
         const key = `${RATE_LIMIT_PREFIX}${ip}`;
         const current = await kv.get<number>(key) || 0;
         const resetAt = Date.now() + getMsUntilMidnight();
@@ -57,6 +57,7 @@ export async function incrementRateLimit(ip: string): Promise<void> {
     }
 
     try {
+        const { kv } = await import('@vercel/kv');
         const key = `${RATE_LIMIT_PREFIX}${ip}`;
         const ttlSeconds = Math.ceil(getMsUntilMidnight() / 1000);
 
