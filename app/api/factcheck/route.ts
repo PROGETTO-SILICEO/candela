@@ -105,12 +105,19 @@ Intervento richiesto.`;
                 console.log('[CANDELA] Using mock report - no API key configured');
                 report = createMockReport(input);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('[CANDELA] Fact-check error:', error);
-            return NextResponse.json<APIResponse<null>>({
-                success: false,
-                error: 'Errore durante la verifica. Riprova tra poco.',
-            }, { status: 500 });
+
+            // If Perplexity returns 401 (no credits/invalid key), fall back to mock
+            if (error?.message?.includes('401') || error?.message?.includes('403')) {
+                console.warn('[CANDELA] Perplexity unavailable (auth error), falling back to mock report');
+                report = createMockReport(input);
+            } else {
+                return NextResponse.json<APIResponse<null>>({
+                    success: false,
+                    error: 'Errore durante la verifica. Riprova tra poco.',
+                }, { status: 500 });
+            }
         }
 
         // Secure the full report (Guardian Only)
